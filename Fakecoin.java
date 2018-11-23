@@ -24,15 +24,18 @@ public class Fakecoin {
 
             System.out.println("Hash Chain with Proof of Work:");
             Block b0 = new Block("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            System.out.println(b0);
             Block b1 = new Block("a", b0);
             b1.calculateHash();
+            System.out.println(b1);
             Block b2 = new Block("b", b1);
             b2.calculateHash();
-
-            System.out.println(b0);
-            System.out.println(b1);
             System.out.println(b2);
             System.out.println("");
+
+            Wallet w1 = new Wallet();
+            Wallet w2 = new Wallet();
+            Wallet w3 = new Wallet();
         }
         catch(UnsupportedEncodingException exception) {
             System.out.println("Error: message isn't encoded in UTF-8.");
