@@ -12,9 +12,9 @@ public class Fakecoin {
             System.out.println("Hash of \"\" \tis " + SHA3.stringToHash(""));
             System.out.println("Hash of \"abc\" \tis " + SHA3.stringToHash("abc"));
             System.out.println("");
-
+            
             System.out.println("Hash Chain:");
-            String h0 = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";            
+            String h0 = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
             String h1 = SHA3.stringToHash(h0 + "a");
             String h2 = SHA3.stringToHash(h1 + "b");
             System.out.println("h0: " + h0);
@@ -33,9 +33,7 @@ public class Fakecoin {
             System.out.println(b2);
             System.out.println("");
 
-            Wallet w1 = new Wallet();
-            Wallet w2 = new Wallet();
-            Wallet w3 = new Wallet();
+            Wallet w1 = new Wallet("Alexandre");
         }
         catch(UnsupportedEncodingException exception) {
             System.out.println("Error: message isn't encoded in UTF-8.");

@@ -9,6 +9,14 @@ public class Utils {
         return result;
     }
 
+    /* Print array of byte */
+    public static void printBytes(byte[] bytes) {
+        for(byte b : bytes) {
+            System.out.print(b);
+        }
+        System.out.println("");
+    }
+
     /* Return true if the given hash is a Fakecoin hash (two last octets at 0) or false if it is not */
     public static boolean isFakecoinHash(String hash) {        
         if( hash.charAt(hash.length()-1) == '0' && 

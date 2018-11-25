@@ -1,58 +1,66 @@
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
-import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
-import org.bouncycastle.crypto.KeyGenerationParameters;
-import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-
 import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.jce.ECNamedCurveTable;
 
+import org.bouncycastle.util.encoders.Hex;
+
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+
 import java.security.KeyPair;
 import java.security.Security;
+import java.security.SecureRandom;
+import java.security.PublicKey;
+import java.security.PrivateKey;
 import java.security.KeyPairGenerator;
-import org.bouncycastle.jce.ECNamedCurveTable;
-import java.security.*;
-import java.security.cert.CertificateFactory;
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.security.cert.X509Certificate;
-import java.security.cert.CertificateException;
+import java.security.spec.ECGenParameterSpec;
+
+import java.util.Base64;
 
 public class Wallet {
+
+    /*
+        generating ec private key with openssl :    openssl ecparam -name prime256v1 -genkey -out prikey.pem -noout
+        generating public key from private :        openssl ec -in prikey.pem -pubout -out pubkey.pem
+
+        sign a message :     openssl dgst -sha256 -sign prikey.pem -out sign.txt message.txt
+        verify a sign :     openssl dgst -sha256 -verify pubkey.pem -signature sign.txt message.txt
+    */
     
-    public Wallet() {
-        /*ECKeyPairGenerator generator = new ECKeyPairGenerator();
-        SecureRandom random = new SecureRandom();
-        ECKeyGenerationParameters params = new KeyGenerationParameters(random, 256);
-        generator.init(params);
-        AsymmetricCipherKeyPair keypair = generator.generateKeyPair();*/
+    public String name;
+
+    public Wallet(String name) {
+        this.name = name;
         
         try {
             Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime192v1");
+            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
             KeyPairGenerator g = KeyPairGenerator.getInstance("ECDSA", "BC");
             g.initialize(ecSpec, new SecureRandom());
             KeyPair keypair = g.generateKeyPair();
 
             PublicKey public_key = keypair.getPublic();
             PrivateKey private_key = keypair.getPrivate();
-
-            byte[] prik = public_key.getEncoded();
-            byte[] pubk = private_key.getEncoded();
-
-            System.out.println("Format: " + public_key.getFormat() + " " + private_key.getFormat());            
-            System.out.println("Private key: " + Utils.bytesToString(prik));
-            System.out.println("Public key: " + Utils.bytesToString(pubk));
+            
+            System.out.println("Private key " + private_key.getAlgorithm() + " (" + private_key.getFormat() + "): " + Hex.toHexString(private_key.getEncoded()));
+            System.out.println("Public key " + public_key.getAlgorithm() + " (" + public_key.getFormat() + "): " + Hex.toHexString(public_key.getEncoded()));
             System.out.println("");
 
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-            InputStream in = new ByteArrayInputStream(public_key.getEncoded());
-            X509Certificate public_cert = (X509Certificate)certFactory.generateCertificate(in);
+            FileOutputStream fos = new FileOutputStream("prikey.pem");
+            fos.write("-----BEGIN PRIVATE KEY-----".getBytes());
+            fos.write(Base64.getMimeEncoder().encodeToString(private_key.getEncoded()).getBytes());
+            fos.write("-----END PRIVATE KEY-----".getBytes());
+            fos.close();
 
+            fos = new FileOutputStream("pubkey.pem");
+            fos.write("-----BEGIN PUBLIC KEY-----\n".getBytes());
+            fos.write(Base64.getMimeEncoder().encodeToString(public_key.getEncoded()).getBytes());
+            fos.write("\n-----END PUBLIC KEY-----\n".getBytes());
+            fos.close();
         }
         catch(InvalidAlgorithmParameterException exception) {
             exception.printStackTrace();
@@ -63,7 +71,10 @@ public class Wallet {
         catch(NoSuchProviderException exception) {
             exception.printStackTrace();
         }
-        catch(CertificateException exception) {
+        catch(FileNotFoundException exception) {
+            exception.printStackTrace();
+        }
+        catch(IOException exception) {
             exception.printStackTrace();
         }
     }
