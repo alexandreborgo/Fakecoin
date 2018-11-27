@@ -33,7 +33,16 @@ public class Fakecoin {
             System.out.println(b2);
             System.out.println("");
 
-            Wallet w1 = new Wallet("Alexandre");
+            Wallet w1 = Wallet.generateNewWallet();
+            Wallet w2 = Wallet.generateNewWallet();
+            Transaction t1 = w1.generateNewTransaction(w2.getPublicKey(), 10);
+            
+            if(Transaction.verifyTransaction(t1.getTransaction(), t1.getSignature())) {
+                System.out.println("Transaction is valid.");
+            }
+            else {
+                System.out.println("Transaction is invalid.");
+            }
         }
         catch(UnsupportedEncodingException exception) {
             System.out.println("Error: message isn't encoded in UTF-8.");

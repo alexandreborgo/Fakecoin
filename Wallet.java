@@ -1,6 +1,7 @@
 
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import org.bouncycastle.util.encoders.Hex;
 
@@ -18,6 +19,9 @@ import java.security.PublicKey;
 import java.security.PrivateKey;
 import java.security.KeyPairGenerator;
 import java.security.spec.ECGenParameterSpec;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.InvalidKeyException;
 
 import java.util.Base64;
 
@@ -31,36 +35,57 @@ public class Wallet {
         verify a sign :     openssl dgst -sha256 -verify pubkey.pem -signature sign.txt message.txt
     */
     
-    public String name;
+    private PrivateKey private_key;
+    private PublicKey public_key;
 
-    public Wallet(String name) {
-        this.name = name;
+    public Wallet() {
+        /*
+        try {
+            String message = "Hello, world!";
+        }
+        catch(InvalidKeyException exception) {
+            exception.printStackTrace();
+        }
+        catch(SignatureException exception) {
+            exception.printStackTrace();
+        }*/
+    }
+
+    public Transaction generateNewTransaction(PublicKey to, int amount) {
+        Transaction transaction = new Transaction(this.public_key, to, amount);
+        String t = transaction.getTransaction();
         
         try {
-            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            Signature sign = Signature.getInstance("ECDSA", new BouncyCastleProvider());
+            sign.initSign(this.private_key);
+            sign.update(t.getBytes());
+            transaction.setSignature(sign.sign());
+        }
+        catch(NoSuchAlgorithmException exception) {
+            exception.printStackTrace();
+        }
+        catch(InvalidKeyException exception) {
+            exception.printStackTrace();
+        }
+        catch(SignatureException exception) {
+            exception.printStackTrace();
+        }
+
+        return transaction;
+    }
+
+    public static Wallet generateNewWallet() {
+        try {
+            Wallet wallet = new Wallet();
             ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-            KeyPairGenerator g = KeyPairGenerator.getInstance("ECDSA", "BC");
+            KeyPairGenerator g = KeyPairGenerator.getInstance("ECDSA", new BouncyCastleProvider());
             g.initialize(ecSpec, new SecureRandom());
             KeyPair keypair = g.generateKeyPair();
 
-            PublicKey public_key = keypair.getPublic();
-            PrivateKey private_key = keypair.getPrivate();
-            
-            System.out.println("Private key " + private_key.getAlgorithm() + " (" + private_key.getFormat() + "): " + Hex.toHexString(private_key.getEncoded()));
-            System.out.println("Public key " + public_key.getAlgorithm() + " (" + public_key.getFormat() + "): " + Hex.toHexString(public_key.getEncoded()));
-            System.out.println("");
+            wallet.public_key = keypair.getPublic();
+            wallet.private_key = keypair.getPrivate();
 
-            FileOutputStream fos = new FileOutputStream("prikey.pem");
-            fos.write("-----BEGIN PRIVATE KEY-----".getBytes());
-            fos.write(Base64.getMimeEncoder().encodeToString(private_key.getEncoded()).getBytes());
-            fos.write("-----END PRIVATE KEY-----".getBytes());
-            fos.close();
-
-            fos = new FileOutputStream("pubkey.pem");
-            fos.write("-----BEGIN PUBLIC KEY-----\n".getBytes());
-            fos.write(Base64.getMimeEncoder().encodeToString(public_key.getEncoded()).getBytes());
-            fos.write("\n-----END PUBLIC KEY-----\n".getBytes());
-            fos.close();
+            return wallet;
         }
         catch(InvalidAlgorithmParameterException exception) {
             exception.printStackTrace();
@@ -68,14 +93,19 @@ public class Wallet {
         catch(NoSuchAlgorithmException exception) {
             exception.printStackTrace();
         }
-        catch(NoSuchProviderException exception) {
-            exception.printStackTrace();
-        }
-        catch(FileNotFoundException exception) {
-            exception.printStackTrace();
-        }
-        catch(IOException exception) {
-            exception.printStackTrace();
-        }
+
+        return null;
+    }
+
+    public PublicKey getPublicKey() {
+        return this.public_key;
+    }
+
+    public String toString() {
+        String wallet = "";
+        wallet += "Private key " + this.private_key.getAlgorithm() + " (" + this.private_key.getFormat() + "): " + Hex.toHexString(private_key.getEncoded()) + "\n";
+        wallet += "Public key " + this.public_key.getAlgorithm() + " (" + this.public_key.getFormat() + "): " + Hex.toHexString(public_key.getEncoded()) + "\n";
+        wallet += "\n";
+        return wallet;
     }
 }
