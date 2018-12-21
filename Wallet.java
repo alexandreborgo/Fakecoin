@@ -1,7 +1,18 @@
 
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.asn1.sec.SECNamedCurves;
+import org.bouncycastle.crypto.params.ECDomainParameters;
+import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 
 import org.bouncycastle.util.encoders.Hex;
 
@@ -27,34 +38,17 @@ import java.util.Base64;
 
 public class Wallet {
 
-    /*
-        generating ec private key with openssl :    openssl ecparam -name prime256v1 -genkey -out prikey.pem -noout
-        generating public key from private :        openssl ec -in prikey.pem -pubout -out pubkey.pem
-
-        sign a message :     openssl dgst -sha256 -sign prikey.pem -out sign.txt message.txt
-        verify a sign :     openssl dgst -sha256 -verify pubkey.pem -signature sign.txt message.txt
-    */
-    
-    private PrivateKey private_key;
-    private PublicKey public_key;
+    private ECPrivateKeyParameters private_key;
+    private ECPublicKeyParameters public_key;
 
     public Wallet() {
-        /*
-        try {
-            String message = "Hello, world!";
-        }
-        catch(InvalidKeyException exception) {
-            exception.printStackTrace();
-        }
-        catch(SignatureException exception) {
-            exception.printStackTrace();
-        }*/
+
     }
 
-    public Transaction generateNewTransaction(PublicKey to, int amount) {
+    public Transaction generateNewTransaction(ECPublicKeyParameters to, int amount) {
         Transaction transaction = new Transaction(this.public_key, to, amount);
         String t = transaction.getTransaction();
-        
+        /*
         try {
             Signature sign = Signature.getInstance("ECDSA", new BouncyCastleProvider());
             sign.initSign(this.private_key);
@@ -69,43 +63,49 @@ public class Wallet {
         }
         catch(SignatureException exception) {
             exception.printStackTrace();
-        }
+        }*/
 
         return transaction;
     }
 
     public static Wallet generateNewWallet() {
-        try {
-            Wallet wallet = new Wallet();
-            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-            KeyPairGenerator g = KeyPairGenerator.getInstance("ECDSA", new BouncyCastleProvider());
-            g.initialize(ecSpec, new SecureRandom());
-            KeyPair keypair = g.generateKeyPair();
+        Wallet wallet = new Wallet();
+        /*ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
+        KeyPairGenerator g = KeyPairGenerator.getInstance("ECDSA", new BouncyCastleProvider());
+        g.initialize(ecSpec, new SecureRandom());
+        KeyPair keypair = g.generateKeyPair();*/
 
-            wallet.public_key = keypair.getPublic();
-            wallet.private_key = keypair.getPrivate();
+        ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
+        X9ECParameters x9EcParams = SECNamedCurves.getByName("secp256k1");
+        ECDomainParameters ecDomainParams = new ECDomainParameters(
+            x9EcParams.getCurve(),
+            x9EcParams.getG(),
+            x9EcParams.getN(),
+            x9EcParams.getH()
+        );
 
-            return wallet;
-        }
-        catch(InvalidAlgorithmParameterException exception) {
-            exception.printStackTrace();
-        }
-        catch(NoSuchAlgorithmException exception) {
-            exception.printStackTrace();
-        }
+        SecureRandom srandom = new SecureRandom();
+        ECKeyGenerationParameters keyGenerationParams = new ECKeyGenerationParameters(ecDomainParams, srandom);
 
-        return null;
+        keyPairGenerator.init(keyGenerationParams);
+        AsymmetricCipherKeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        wallet.public_key = (ECPublicKeyParameters)keyPair.getPublic();
+        wallet.private_key = (ECPrivateKeyParameters)keyPair.getPrivate();
+
+        return wallet;
     }
 
-    public PublicKey getPublicKey() {
+    public ECPublicKeyParameters getPublicKey() {
         return this.public_key;
     }
 
     public String toString() {
         String wallet = "";
-        wallet += "Private key " + this.private_key.getAlgorithm() + " (" + this.private_key.getFormat() + "): " + Hex.toHexString(private_key.getEncoded()) + "\n";
-        wallet += "Public key " + this.public_key.getAlgorithm() + " (" + this.public_key.getFormat() + "): " + Hex.toHexString(public_key.getEncoded()) + "\n";
-        wallet += "\n";
+        wallet += "Private key: " + private_key.getD() + "\n";
+        wallet += "Public key:";
+        wallet += Hex.toHexString(public_key.getQ().getEncoded(false));
+        wallet += "\n"; 
         return wallet;
     }
 }

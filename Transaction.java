@@ -12,14 +12,15 @@ import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 
 public class Transaction {
-    PublicKey from;
-    PublicKey to;
+    ECPublicKeyParameters from;
+    ECPublicKeyParameters to;
     int amount = 0;
     byte[] signature;
 
-    public Transaction(PublicKey from, PublicKey to, int amount) {
+    public Transaction(ECPublicKeyParameters from, ECPublicKeyParameters to, int amount) {
         this.from = from;
         this.to = to;
         this.amount = amount;
@@ -35,18 +36,18 @@ public class Transaction {
 
     public String getTransaction() {
         String transaction = "";
-        transaction = Hex.toHexString(this.from.getEncoded()) + " " + Hex.toHexString(this.to.getEncoded()) + " " + this.amount;
+        //transaction = Hex.toHexString(this.from.getEncoded()) + " " + Hex.toHexString(this.to.getEncoded()) + " " + this.amount;
         return transaction;
     }
 
     public String toString() {
         String transaction = "";
-        transaction = Hex.toHexString(this.from.getEncoded()) + " " + Hex.toHexString(this.to.getEncoded()) + " " + this.amount + " " + this.signature != null ? Hex.toHexString(this.signature) : "";
+        //transaction = Hex.toHexString(this.from.getEncoded()) + " " + Hex.toHexString(this.to.getEncoded()) + " " + this.amount + " " + this.signature != null ? Hex.toHexString(this.signature) : "";
         return transaction;
     }
 
     public static boolean verifyTransaction(String transaction, byte[] arrby) {
-        String[] tsplit = transaction.split(" ");
+        /*String[] tsplit = transaction.split(" ");
         String from = tsplit[0];
         String string3 = tsplit[1];
         String string4 = tsplit[2];
@@ -54,7 +55,7 @@ public class Transaction {
         
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("ECDSA", new BouncyCastleProvider());
-            PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(signatureBytes));
+            AsymmetricKeyParameter publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(signatureBytes));
             Signature signature = Signature.getInstance("ECDSA", new BouncyCastleProvider());
             signature.initVerify(publicKey);
             signature.update(transaction.getBytes());
@@ -74,7 +75,7 @@ public class Transaction {
         }
         catch (SignatureException signatureException) {
             signatureException.printStackTrace();
-        }
+        }*/
         return false;
     }
 }

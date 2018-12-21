@@ -35,6 +35,10 @@ public class Fakecoin {
 
             Wallet w1 = Wallet.generateNewWallet();
             Wallet w2 = Wallet.generateNewWallet();
+
+            System.out.println(w1);
+            System.out.println(w2);
+            
             Transaction t1 = w1.generateNewTransaction(w2.getPublicKey(), 10);
             
             if(Transaction.verifyTransaction(t1.getTransaction(), t1.getSignature())) {
