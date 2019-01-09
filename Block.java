@@ -30,20 +30,28 @@ public class Block {
         this.transactions = transactions;
         this.previous = previous;
         this.id = this.previous.getId()+1;
-        this.random = 0;
+        this.random = -1;
         this.hash = "";
     }
 
     /* Calculate the Fakecoin hash of this block */
     public void calculateHash() throws UnsupportedEncodingException {
         do {
-            this.hash = SHA3.stringToHash(this.previous.getHash() + this.transactions + String.valueOf(this.random));
             this.random++;
+            this.hash = SHA3.stringToHash(this.previous.getHash() + this.transactions + String.valueOf(this.random));
         } while(!Utils.isFakecoinHash(hash));
     }
 
     public String getHash() {
         return this.hash;
+    }
+
+    public int getRandom() {
+        return this.random;
+    }
+
+    public String getTransaction() {
+        return this.transactions;
     }
 
     public int getId() {
@@ -52,9 +60,10 @@ public class Block {
 
     public String toString() {
         String tostring = "";
-        tostring += "Block n°" + this.id + "\n";
+        tostring += "========== Block n°" + this.id + " ==========\n";
         tostring += "Hash: " + this.hash + "\n";
         tostring += "Random: " + this.random + "\n";
+        tostring += "Transaction: " + this.transactions;
         return tostring;
     }
 }

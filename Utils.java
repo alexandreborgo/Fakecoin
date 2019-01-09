@@ -27,4 +27,13 @@ public class Utils {
         }
         return false;
     }
+
+    public static void isValidTransaction(Transaction t) {
+        if(t.verifyTransaction()) {
+            System.out.println("Transaction is valid.");
+        }
+        else {
+            System.out.println("Transaction is invalid.");
+        }
+    }
 }

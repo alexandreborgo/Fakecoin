@@ -10,6 +10,7 @@ import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.signers.ECDSASigner;
 
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
@@ -19,6 +20,7 @@ import org.bouncycastle.util.encoders.Hex;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -47,34 +49,13 @@ public class Wallet {
 
     public Transaction generateNewTransaction(ECPublicKeyParameters to, int amount) {
         Transaction transaction = new Transaction(this.public_key, to, amount);
-        String t = transaction.getTransaction();
-        /*
-        try {
-            Signature sign = Signature.getInstance("ECDSA", new BouncyCastleProvider());
-            sign.initSign(this.private_key);
-            sign.update(t.getBytes());
-            transaction.setSignature(sign.sign());
-        }
-        catch(NoSuchAlgorithmException exception) {
-            exception.printStackTrace();
-        }
-        catch(InvalidKeyException exception) {
-            exception.printStackTrace();
-        }
-        catch(SignatureException exception) {
-            exception.printStackTrace();
-        }*/
-
+        transaction.signTransaction(this.private_key);
         return transaction;
     }
 
     public static Wallet generateNewWallet() {
         Wallet wallet = new Wallet();
-        /*ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-        KeyPairGenerator g = KeyPairGenerator.getInstance("ECDSA", new BouncyCastleProvider());
-        g.initialize(ecSpec, new SecureRandom());
-        KeyPair keypair = g.generateKeyPair();*/
-
+        
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         X9ECParameters x9EcParams = SECNamedCurves.getByName("secp256k1");
         ECDomainParameters ecDomainParams = new ECDomainParameters(
@@ -102,10 +83,7 @@ public class Wallet {
 
     public String toString() {
         String wallet = "";
-        wallet += "Private key: " + private_key.getD() + "\n";
-        wallet += "Public key:";
-        wallet += Hex.toHexString(public_key.getQ().getEncoded(false));
-        wallet += "\n"; 
+        wallet += Hex.toHexString(this.public_key.getQ().getEncoded(true));
         return wallet;
     }
 }
